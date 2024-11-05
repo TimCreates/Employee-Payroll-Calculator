@@ -80,7 +80,21 @@
             background-color: #5E35B1;
         }
 
-        /* Net Pay display */
+        /* Breakdown section */
+        .breakdown {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .breakdown div {
+            margin: 5px 0;
+        }
+
+        .breakdown span {
+            font-weight: bold;
+        }
+
+        /* Final net pay */
         h3 {
             margin-top: 20px;
             font-size: 18px;
@@ -98,7 +112,7 @@
 <div class="calculator">
     <h2>Employee Payroll Calculator</h2>
 
-    <label for="hours">Hours Worked:</label>
+    <label for="hours">Hours Worked (per week):</label>
     <input type="number" id="hours">
 
     <label for="rate">Hourly Rate:</label>
@@ -107,31 +121,48 @@
     <label for="deductions">Deductions:</label>
     <input type="number" id="deductions">
 
-    <label for="tax">Tax Rate (%):</label>
-    <input type="number" id="tax">
-
     <button id="calculate" py-click="calculate_payroll()">Calculate Payroll</button>
+
+    <div class="breakdown">
+        <div>Gross Pay: <span id="gross_pay">₱0.00</span></div>
+        <div>Tax: <span id="tax">₱0.00</span></div>
+        <div>Deductions: <span id="deductions_display">₱0.00</span></div>
+    </div>
 
     <h3>Net Pay: <span id="net_pay">₱0.00</span></h3>
 </div>
 
 <py-script>
 def calculate_payroll():
-    hours = float(Element("hours").value or 0)
+    hours_per_week = float(Element("hours").value or 0)
     rate = float(Element("rate").value or 0)
     deductions = float(Element("deductions").value or 0)
-    tax_rate = float(Element("tax").value or 0) / 100
-
-    # Calculate gross pay
-    gross_pay = hours * rate
     
-    # Calculate tax
-    tax = gross_pay * tax_rate
+    # Calculate weekly gross pay
+    weekly_gross_pay = hours_per_week * rate
+    
+    # Calculate monthly gross pay (assuming 4 weeks per month)
+    monthly_gross_pay = weekly_gross_pay * 4
+    
+    # Determine tax based on the Philippine tax brackets (2024)
+    if monthly_gross_pay <= 250000:
+        tax = 0
+    elif monthly_gross_pay <= 400000:
+        tax = 0.20 * (monthly_gross_pay - 250000)
+    elif monthly_gross_pay <= 800000:
+        tax = 30000 + 0.25 * (monthly_gross_pay - 400000)
+    elif monthly_gross_pay <= 2000000:
+        tax = 130000 + 0.30 * (monthly_gross_pay - 800000)
+    else:
+        tax = 490000 + 0.35 * (monthly_gross_pay - 2000000)
     
     # Calculate net pay
-    net_pay = gross_pay - tax - deductions
+    net_pay = monthly_gross_pay - tax - deductions
 
-    # Display net pay in pesos
+    # Display breakdown and final net pay in pesos
+    Element("gross_pay").element.innerText = f"₱{monthly_gross_pay:.2f}"
+    Element("tax").element.innerText = f"₱{tax:.2f}"
+    Element("deductions_display").element.innerText = f"₱{deductions:.2f}"
     Element("net_pay").element.innerText = f"₱{net_pay:.2f}"
 </py-script>
 
